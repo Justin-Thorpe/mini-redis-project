@@ -11,11 +11,12 @@ Execute command
 Send response
 Continue accepting commands
 '''
+
 import asyncio
 from collections import namedtuple
 
-from protocol import ProtocolHandler
-from client import Client
+from src.protocol import ProtocolHandler
+from src.client import Client
 
 class CommandError(Exception): pass
 class Disconnect(Exception): pass

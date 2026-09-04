@@ -8,7 +8,14 @@ Return results or errors
 '''
 
 import asyncio
-from protocol import ProtocolHandler
+from collections import namedtuple
+
+from src.protocol import ProtocolHandler
+
+class CommandError(Exception): pass
+class Disconnect(Exception): pass
+
+Error = namedtuple('Error', ('message',))
 
 class Client:
     def __init__(self,  host='127.0.0.1', port=6379):
@@ -23,10 +30,10 @@ class Client:
 
     async def execute(self, *args):
         await self._protocol.write_response(self._writer, args)
-        return await self._protocol.handle_request(self._writer)
+        return await self._protocol.handle_request(self._reader)
 
-    async def ping(self, key):
-        return await self.execute('PING', key)
+    async def ping(self):
+        return await self.execute('PING')
 
     async def get(self, key):
         return await self.execute('GET', key)

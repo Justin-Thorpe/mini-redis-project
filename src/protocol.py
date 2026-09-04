@@ -6,8 +6,11 @@ Parse commands
 Serialize responses
 Handle invalid requests
 '''
-from io import BytesIO
+
 from collections import namedtuple
+
+class CommandError(Exception): pass
+class Disconnect(Exception): pass
 
 Error = namedtuple('Error', ('message',))
 
@@ -28,23 +31,22 @@ class ProtocolHandler:
 
     async def handle_request(self, reader):
         # Parse client commands
-        first_byte = await reader.read(1)
-        try:
-            return await self.handlers[first_byte](reader)
-        except KeyError:
-            raise KeyError()
+        first_byte = (await (reader.read(1))).decode()
+        if not first_byte:
+            raise Disconnect()
+        return await self.handlers[first_byte](reader)
 
     async def handle_simple_string(self, reader):
-        return await reader.readline().rstrip(b"\r\n")
+        return (await reader.readline()).rstrip(b"\r\n")
 
     async def handle_error(self, reader):
         return Error((await reader.readline()).rstrip(b"\r\n"))
 
     async def handle_integer(self, reader):
-        return int(await reader.readline().rstrip(b'\r\n'))
+        return int((await reader.readline()).rstrip(b'\r\n'))
 
     async def handle_string(self, reader):
-        length = int(await reader.readline().rstrip(b'\r\n'))
+        length = int((await reader.readline()).rstrip(b'\r\n'))
 
         if length == -1:
             return None
@@ -53,20 +55,20 @@ class ProtocolHandler:
         return reader.read(length)[:-2]
 
     async def handle_array(self, reader):
-        num_items = int(await reader.readline().rstrip(b'\r\n'))
-        return [await self.handle_requests(reader) for _ in range(num_items * 2)]
+        num_items = int((await reader.readline()).rstrip(b'\r\n'))
+        return [await self.handle_request(reader) for _ in range(num_items * 2)]
 
     async def handle_set(self, reader):
-        num_items = int(await reader.readline().rstrip(b'\r\n'))
-        return [await self.handle_requests(reader) for _ in range(num_items * 2)]
+        num_items = int((await reader.readline()).rstrip(b'\r\n'))
+        return [await self.handle_request(reader) for _ in range(num_items * 2)]
 
     async def handle_dict(self, reader):
-        num_items = int(reader.readline().rstrip(b'\r\n'))
-        elements = [await self.handle_requests(reader) for _ in range(num_items * 2)]
+        num_items = int((reader.readline()).rstrip(b'\r\n'))
+        elements = [await self.handle_request(reader) for _ in range(num_items * 2)]
         return dict(zip(elements[::2], elements[1::2]))
 
     async def handle_boolean(self, reader):
-        return bool(await reader.readline().rstrip(b'\r\n'))
+        return bool((await reader.readline()).rstrip(b'\r\n'))
 
     async def handle_null(self, reader):
         await reader.readline()

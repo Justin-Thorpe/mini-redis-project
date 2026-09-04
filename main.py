@@ -1,8 +1,9 @@
-from src import server, client, protocol
 import asyncio
+from src.server import Server
 
 async def main():
-    pass
+    server = Server()
+    await server.run()
 
 if __name__ == "__main__":
     asyncio.run(main())
