@@ -37,10 +37,10 @@ class ProtocolHandler:
         return await self.handlers[first_byte](reader)
 
     async def handle_simple_string(self, reader):
-        return (await reader.readline()).rstrip(b"\r\n")
+        return (await reader.readline()).rstrip(b"\r\n").decode()
 
     async def handle_error(self, reader):
-        return Error((await reader.readline()).rstrip(b"\r\n"))
+        return Error((await reader.readline()).rstrip(b"\r\n")).decode()
 
     async def handle_integer(self, reader):
         return int((await reader.readline()).rstrip(b'\r\n'))
@@ -50,17 +50,17 @@ class ProtocolHandler:
 
         if length == -1:
             return None
-        length += 2
 
-        return (await reader.read(length))[:-2]
+        data = await reader.readexactly(length + 2)
+        return data[:-2].decode()
 
     async def handle_array(self, reader):
         num_items = int((await reader.readline()).rstrip(b'\r\n'))
-        return [await self.handle_request(reader) for _ in range(num_items * 2)]
+        return [await self.handle_request(reader) for _ in range(num_items)]
 
     async def handle_set(self, reader):
         num_items = int((await reader.readline()).rstrip(b'\r\n'))
-        return [await self.handle_request(reader) for _ in range(num_items * 2)]
+        return [await self.handle_request(reader) for _ in range(num_items)]
 
     async def handle_dict(self, reader):
         num_items = int((reader.readline()).rstrip(b'\r\n'))

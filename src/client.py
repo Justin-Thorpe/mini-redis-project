@@ -10,12 +10,7 @@ Return results or errors
 import asyncio
 from collections import namedtuple
 
-from src.protocol import ProtocolHandler
-
-class CommandError(Exception): pass
-class Disconnect(Exception): pass
-
-Error = namedtuple('Error', ('message',))
+from src.protocol import ProtocolHandler, CommandError, Disconnect, Error
 
 class Client:
     def __init__(self, host='127.0.0.1', port=6379):
@@ -42,7 +37,7 @@ class Client:
         return await self.execute('SET', key, value)
     
     async def delete(self, key):
-        return await self.execute('DELETE', key)
+        return await self.execute('DEL', key)
     
     async def flush(self):
         return await self.execute('FLUSH')

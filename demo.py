@@ -5,9 +5,9 @@ async def main():
     client = Client()
     await client.connect()
 
-    command = input(">")
-
     while True:
+        command = input("> ")
+
         if command.lower() == "exit":
             break
 

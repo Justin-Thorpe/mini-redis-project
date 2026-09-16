@@ -15,13 +15,8 @@ Continue accepting commands
 import asyncio
 from collections import namedtuple
 
-from src.protocol import ProtocolHandler
+from src.protocol import ProtocolHandler, Disconnect, CommandError, Error
 from src.client import Client
-
-class CommandError(Exception): pass
-class Disconnect(Exception): pass
-
-Error = namedtuple('Error', ('message',))
 
 class Server:
     def __init__(self, host="127.0.0.1", port=6379):
@@ -65,7 +60,7 @@ class Server:
         if not isinstance(data, list):
             data = data.split()
 
-        command = data[0].decode().upper()
+        command = data[0].upper()
         if command not in self._commands:
             return  CommandError(f'Unrecognizd Command: {command}')
 
