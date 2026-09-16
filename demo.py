@@ -5,7 +5,16 @@ async def main():
     client = Client()
     await client.connect()
 
-    print(await client.ping())
+    command = input(">")
+
+    while True:
+        if command.lower() == "exit":
+            break
+
+        parts = command.split()
+        response = await client.execute(*parts)
+
+        print(response)
 
     await client.close()
 

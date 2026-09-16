@@ -52,7 +52,7 @@ class ProtocolHandler:
             return None
         length += 2
 
-        return reader.read(length)[:-2]
+        return (await reader.read(length))[:-2]
 
     async def handle_array(self, reader):
         num_items = int((await reader.readline()).rstrip(b'\r\n'))

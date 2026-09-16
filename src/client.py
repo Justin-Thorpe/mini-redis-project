@@ -18,7 +18,7 @@ class Disconnect(Exception): pass
 Error = namedtuple('Error', ('message',))
 
 class Client:
-    def __init__(self,  host='127.0.0.1', port=6379):
+    def __init__(self, host='127.0.0.1', port=6379):
         self._host = host
         self._port = port
         self._protocol = ProtocolHandler()
