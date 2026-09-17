@@ -8,7 +8,6 @@ Return results or errors
 '''
 
 import asyncio
-from collections import namedtuple
 
 from src.protocol import ProtocolHandler, CommandError, Disconnect, Error
 
@@ -25,7 +24,12 @@ class Client:
 
     async def execute(self, *args):
         await self._protocol.write_response(self._writer, args)
-        return await self._protocol.handle_request(self._reader)
+        resp = await self._protocol.handle_request(self._reader)
+
+        if isinstance(resp, Error):
+            raise CommandError(resp.message)
+
+        return resp
 
     async def ping(self):
         return await self.execute('PING')

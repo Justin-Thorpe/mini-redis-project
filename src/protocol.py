@@ -8,9 +8,11 @@ Handle invalid requests
 '''
 
 from collections import namedtuple
+import asyncio
 
 class CommandError(Exception): pass
 class Disconnect(Exception): pass
+class ProtocolError(Exception): pass
 
 Error = namedtuple('Error', ('message',))
 
@@ -32,18 +34,31 @@ class ProtocolHandler:
     async def handle_request(self, reader):
         # Parse client commands
         first_byte = (await (reader.read(1))).decode()
+
         if not first_byte:
             raise Disconnect()
+
+        if first_byte not in self.handlers:
+            raise ProtocolError(f"Unknown protocol type: {first_byte}")
+        
         return await self.handlers[first_byte](reader)
 
     async def handle_simple_string(self, reader):
         return (await reader.readline()).rstrip(b"\r\n").decode()
 
     async def handle_error(self, reader):
-        return Error((await reader.readline()).rstrip(b"\r\n")).decode()
+        message = (await reader.readline()).rstrip(b"\r\n")
+
+        if isinstance(message, bytes):
+            message = message.decode()
+
+        return Error(message)
 
     async def handle_integer(self, reader):
-        return int((await reader.readline()).rstrip(b'\r\n'))
+        try:
+            return int((await reader.readline()).rstrip(b'\r\n'))
+        except ValueError:
+            raise ProtocolError("Invalid string length")
 
     async def handle_string(self, reader):
         length = int((await reader.readline()).rstrip(b'\r\n'))
